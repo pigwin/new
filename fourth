@@ -1,0 +1,145 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<math.h>
+#include<time.h>
+#define snprintf _snprintf
+void crossing();
+struct DATA{
+	int data;
+	int num;
+};
+struct DATA data[4];
+int l_data[4][10];
+int lownum=0;
+int main(){
+	int answer=0;
+	int ansnum;
+	printf("値をどうしますか?");
+	scanf_s("%d",&answer);
+	FILE*f[4];
+	int count=0;
+	//初期化処理-------------------------------
+	for(int i=0;i<4;i++){
+		char name[20];
+		snprintf(name,20,"%d.txt",i);
+		fopen_s(&f[i],name,"w");
+		for(int j=0;j<10;j++){
+			count+=i;
+			srand((unsigned)count);
+			fprintf(f[i],"%d\n",rand()%2);
+		}
+		fclose(f[i]);
+	}
+	//-----------------------------------------
+	while(true){
+		FILE*ff;
+		for(int i=0;i<4;i++){
+			data[i].data=-1;
+			data[i].num=0;
+		}
+		for(int i=0;i<4;i++){
+			char name[20];
+			int answers=0;
+			snprintf(name,20,"%d.txt",i+lownum);
+			if(fopen_s(&ff,name,"r")!=NULL){
+				printf("%d\n",i);
+				printf("エラーが発生しました\nもう一度入力してください");
+				system("PAUSE");
+			}
+			for(int j=0;j<10;j++){
+				int a;
+				fscanf(ff,"%d",&a);
+				answers+=a*(j+1);
+			}
+			data[i].data=(int)fabs((double)answer-answers);	
+			data[i].num=i+lownum;
+			if(data[i].data==0){
+				ansnum=i;
+				fclose(ff);
+				goto ANSWER;
+			}
+		}
+		for(int i=0;i<4;i++){
+			for(int j=0;j<4;j++){	
+				if(i==j)continue;
+				if(data[i].data<data[j].data){
+					DATA sa;
+					sa=data[i];
+					data[i]=data[j];
+					data[j]=sa;
+				}
+			}
+		}
+		fclose(ff);
+		crossing();
+		for(int i=0;i<4;i++){
+			char name[20];
+			FILE*ff;
+			snprintf(name,20,"%d.txt",i+lownum);
+			fopen_s(&ff,name,"w");
+			for(int j=0;j<10;j++){
+				fprintf(ff,"%d\n",l_data[i][j]);
+			}
+			fclose(ff);
+		}
+	}
+ANSWER:
+	FILE*fa;
+	FILE*ans;
+	fopen_s(&fa,"answer.txt","w");
+	char name[20];
+	snprintf(name,20,"%d.txt",data[ansnum].num);
+	fopen_s(&ans,name,"r");
+	for(int i=0;i<10;i++){
+		int a=0;
+		fscanf_s(ans,"%d",&a);
+		if(i==9){
+			fprintf(fa,"%d=%d",a*(i+1),answer);
+		}else{
+			fprintf(fa,"%d+",a*(i+1));
+		}
+	}
+	fclose(ans);
+	return 0;
+}
+void crossing(){
+	FILE*f[2];
+	char name[2][15];
+	snprintf(name[0],15,"%d.txt",data[0].num);
+	fopen_s(&f[0],name[0],"r");
+	snprintf(name[1],15,"%d.txt",data[1].num);
+	fopen_s(&f[1],name[1],"r");
+	int d[2][10];
+	for(int i=0;i<10;i++){
+		fscanf(f[0],"%d",&d[0][i]);
+		fscanf(f[1],"%d",&d[1][i]);
+	}
+	for(int i=0;i<4;i++){
+		for(int j=0;j<10;j++){
+			if(i%2){
+				l_data[i][j]=d[1][j];
+			}else{
+				l_data[i][j]=d[0][j];
+			}
+		}
+	}
+	srand((unsigned)time(NULL)+1000);
+	int a=rand()%(10-4);
+	for(int j=0;j<4;j+=2){
+		for(int i=a;i<a+4;i++){
+			srand((unsigned)(i*j+1000));
+			if((rand()%12)==0){
+				srand((unsigned)i+1000);
+				l_data[j][i]=rand()%2;
+				l_data[j][i+1]=rand()%2;
+			}else{
+				int t=l_data[j][i];
+				l_data[j][i]=l_data[j][i+1];
+				l_data[j][i+1]=t;
+			}
+		}
+	}
+	lownum+=4;
+	fclose(f[0]);
+	fclose(f[1]);
+}

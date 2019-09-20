@@ -8,6 +8,7 @@ struct DATA{
 	int data;
 	int num;
 };
+int test;
 struct DATA data[4];
 int main(){
 	int answer=0;
